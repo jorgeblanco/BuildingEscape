@@ -22,36 +22,54 @@ void UOpenDoor::BeginPlay()
 	OriginalRotation = GetOwner()->GetActorRotation();
 	TargetRotation = GetOwner()->GetActorRotation();
 	TargetRotation.Add(0.f, TargetYaw, 0.f);
+
+	if (!PressurePlate)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s does not have a pressure plate set"), *GetOwner()->GetName());
+	}
+
+	PressureActivator = GetWorld()->GetFirstPlayerController()->GetPawn();
 }
 
+void UOpenDoor::LerpDoorOpen(const float DeltaTime)
+{
+	bIsOpen = true;
+	DoorCloseTime = GetWorld()->GetTimeSeconds() + CloseDelayInSeconds;
+	FRotator CurrentRotation = GetOwner()->GetActorRotation();
+
+	if (CurrentRotation.Equals(TargetRotation, 1.0f))
+	{
+		return;
+	}
+	
+	CurrentRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, OpeningSpeed);
+	GetOwner()->SetActorRotation(CurrentRotation);
+}
+
+void UOpenDoor::LerpDoorClosed(const float DeltaTime)
+{
+	FRotator CurrentRotation = GetOwner()->GetActorRotation();
+	CurrentRotation = FMath::RInterpTo(CurrentRotation, OriginalRotation, DeltaTime, ClosingSpeed);
+	GetOwner()->SetActorRotation(CurrentRotation);
+
+	if (CurrentRotation.Equals(OriginalRotation, 1.0f))
+	{
+		bIsOpen = false;
+	}
+}
 
 // Called every frame
 void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (!bIsOpen)
+	if (PressurePlate && PressurePlate->IsOverlappingActor(PressureActivator))
 	{
-		FRotator CurrentRotation = GetOwner()->GetActorRotation();
-		CurrentRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, OpeningSpeed);
-		GetOwner()->SetActorRotation(CurrentRotation);
-
-		if (CurrentRotation.Equals(TargetRotation, 1.0f))
-		{
-			bIsOpen = true;
-		}
+		LerpDoorOpen(DeltaTime);
 	}
-	
-	if (bIsOpen)
+	else if (bIsOpen && GetWorld()->GetTimeSeconds() > DoorCloseTime)
 	{
-		FRotator CurrentRotation = GetOwner()->GetActorRotation();
-		CurrentRotation = FMath::RInterpTo(CurrentRotation, OriginalRotation, DeltaTime, OpeningSpeed);
-		GetOwner()->SetActorRotation(CurrentRotation);
-
-		if (CurrentRotation.Equals(OriginalRotation, 1.0f))
-		{
-			bIsOpen = false;
-		}
+		LerpDoorClosed(DeltaTime);
 	}
 }
 
