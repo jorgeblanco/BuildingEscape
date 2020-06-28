@@ -23,6 +23,7 @@ protected:
 	virtual void BeginPlay() override;
 	void LerpDoorOpen(float DeltaTime);
 	void LerpDoorClosed(float DeltaTime);
+	float GetTotalMassOfOverlappingActors() const;
 
 public:	
 	// Called every frame
@@ -42,10 +43,10 @@ private:
 	float CloseDelayInSeconds = 2.0f;
 	
 	UPROPERTY(EditAnywhere)
-	ATriggerVolume* PressurePlate;
+	ATriggerVolume* PressurePlate = nullptr;
 
 	UPROPERTY(EditAnywhere)
-	AActor* PressureActivator;
+	float RequiredTotalMass = 0.f;
 	
 	FRotator OriginalRotation;
 	FRotator TargetRotation;

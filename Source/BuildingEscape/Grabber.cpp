@@ -28,7 +28,7 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// If the physics handle is attached, move the object we're holding
-	if (PhysicsHandle->GrabbedComponent)
+	if (PhysicsHandle && PhysicsHandle->GrabbedComponent)
 	{
 		PhysicsHandle->SetTargetLocation(GetReachVector());
 	}
@@ -124,7 +124,7 @@ void UGrabber::Grab()
 {
 	const FHitResult Hit = RayCastForPhysicBodies();
 	UPrimitiveComponent* ComponentToGrab = Hit.GetComponent();
-	if (ComponentToGrab)
+	if (ComponentToGrab && PhysicsHandle)
 	{
 		const FVector ReachVector = GetReachVector();
 		PhysicsHandle->GrabComponentAtLocation(
@@ -137,7 +137,7 @@ void UGrabber::Grab()
 
 void UGrabber::Release()
 {
-	if (PhysicsHandle->GrabbedComponent)
+	if (PhysicsHandle && PhysicsHandle->GrabbedComponent)
 	{
 		PhysicsHandle->ReleaseComponent();
 	}
