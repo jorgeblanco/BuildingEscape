@@ -3,6 +3,8 @@
 
 #include "OpenDoor.h"
 
+#include "Components/AudioComponent.h"
+
 // Sets default values for this component's properties
 UOpenDoor::UOpenDoor()
 {
@@ -11,6 +13,22 @@ UOpenDoor::UOpenDoor()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
+void UOpenDoor::FindPressurePlate()
+{
+	if (!PressurePlate)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s does not have a pressure plate set"), *GetOwner()->GetName());
+	}
+}
+
+void UOpenDoor::FindAudioComponent()
+{
+	AudioComponent = GetOwner()->FindComponentByClass<UAudioComponent>();
+	if (!AudioComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s missing audio component"), *GetOwner()->GetName());
+	}
+}
 
 // Called when the game starts
 void UOpenDoor::BeginPlay()
@@ -21,14 +39,16 @@ void UOpenDoor::BeginPlay()
 	TargetRotation = GetOwner()->GetActorRotation();
 	TargetRotation.Add(0.f, TargetYaw, 0.f);
 
-	if (!PressurePlate)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s does not have a pressure plate set"), *GetOwner()->GetName());
-	}
+	FindPressurePlate();
+	FindAudioComponent();
 }
 
 void UOpenDoor::LerpDoorOpen(const float DeltaTime)
 {
+	if (!bIsOpen && AudioComponent)
+	{
+		AudioComponent->Play();
+	}
 	bIsOpen = true;
 	DoorCloseTime = GetWorld()->GetTimeSeconds() + CloseDelayInSeconds;
 	FRotator CurrentRotation = GetOwner()->GetActorRotation();
@@ -51,6 +71,10 @@ void UOpenDoor::LerpDoorClosed(const float DeltaTime)
 	if (CurrentRotation.Equals(OriginalRotation, 1.0f))
 	{
 		bIsOpen = false;
+		if (AudioComponent)
+		{
+			AudioComponent->Play();
+		}
 	}
 }
 

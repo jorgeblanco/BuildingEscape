@@ -24,6 +24,8 @@ protected:
 	void LerpDoorOpen(float DeltaTime);
 	void LerpDoorClosed(float DeltaTime);
 	float GetTotalMassOfOverlappingActors() const;
+	void FindPressurePlate();
+	void FindAudioComponent();
 
 public:	
 	// Called every frame
@@ -47,6 +49,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float RequiredTotalMass = 0.f;
+	
+	UPROPERTY()
+	UAudioComponent* AudioComponent = nullptr; 
 	
 	FRotator OriginalRotation;
 	FRotator TargetRotation;
